@@ -22,25 +22,9 @@ public class Main {
                 map[j] = input.readLine().toCharArray();
             }
 
-            //int matrix holding number of paths to that tile
-            int[][] noPaths = new int[noRows][noColumns];
-            noPaths[0][0] = 1;
+            PathSolver pathSolver = new PathSolver(noRows, noColumns, noConsecJumps, noMaxJumps, map);
 
-            for (int k = 0; k < noRows; k++) {
-                for (int l = 0; l < noColumns; l++) {
-                    //down rule
-                    if (k + 1 < noRows) {
-                        noPaths[k + 1][l] += noPaths[k][l];
-                    }
-                    //right rule
-                    if (l +  1 < noColumns) {
-                        noPaths[k][l + 1] += noPaths[k][l];
-                    }
-
-                }
-            }
-            //output last element
-            System.out.println(noPaths[noRows - 1][noColumns - 1]);
+            System.out.println(pathSolver.answer());
         }
     }
 }
