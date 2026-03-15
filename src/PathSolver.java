@@ -7,7 +7,7 @@ public class PathSolver {
 
     char[][] map;
 
-    int[][] noPaths;
+    int[][][] noPaths;
 
     public PathSolver(int noRows, int noColumns, int noConsecJumps, int noMaxJumps, char[][] map) {
         this.noRows = noRows;
@@ -18,29 +18,52 @@ public class PathSolver {
         this.map = map;
 
         //int matrix holding number of paths to that tile
-        noPaths = new int[noRows][noColumns];
-        noPaths[0][0] = 1;
+        noPaths = new int[noRows][noColumns][noMaxJumps + 1];
+        noPaths[0][0][0] = 1;
     }
 
     public int answer() {
-        for (int k = 0; k < noRows; k++) {
-            for (int l = 0; l < noColumns; l++) {
-                if (k == 0 && l == 0) {
-                    continue;
-                }
-                //down rule
-                if (k > 0) {
-                    noPaths[k][l] += noPaths[k - 1][l];
-                }
+        for (int i = 0; i < noRows; i++) {
+            for (int j = 0; j < noColumns; j++) {
+                for (int k = 0; k < noMaxJumps + 1; k++) {
+                    if (i == 0 && j == 0) {
+                        continue;
+                    }
 
-                //right rule
-                if (l > 0) {
-                    noPaths[k][l] += noPaths[k][l - 1];
-                }
+                    //down rule
+                    if (i > 0) {
+                        noPaths[i][j][k] += noPaths[i - 1][j][k];
+                    }
 
+                    //right rule
+                    if (j > 0) {
+                        noPaths[i][j][k] += noPaths[i][j - 1][k];
+                    }
+
+                    //left-down rule
+                    if (i > 0 && j < noColumns - 1 && k != 0) {
+                        noPaths[i][j][k] += noPaths[i - 1][j + 1][k - 1];
+                    }
+
+                    //down-down rule
+                    if (i > 1 && k != 0) {
+                        noPaths[i][j][k] += noPaths[i - 2][j][k - 1];
+                    }
+
+                    //right-down rule
+                    if (i > 0 && j > 0 && k != 0) {
+                        noPaths[i][j][k] += noPaths[i - 1][j - 1][k - 1];
+                    }
+                }
             }
         }
-        //output last element
-        return noPaths[noRows - 1][noColumns - 1];
+
+        //sum all jump final spaces
+        int total = 0;
+        for (int i = 0; i < noMaxJumps + 1; i++) {
+            total = total + noPaths[noRows - 1][noColumns - 1][i];
+        }
+        //output total
+        return total;
     }
 }
