@@ -25,13 +25,17 @@ public class PathSolver {
     public int answer() {
         for (int k = 0; k < noRows; k++) {
             for (int l = 0; l < noColumns; l++) {
-                //down rule
-                if (k + 1 < noRows) {
-                    noPaths[k + 1][l] += noPaths[k][l];
+                if (k == 0 && l == 0) {
+                    continue;
                 }
+                //down rule
+                if (k > 0) {
+                    noPaths[k][l] += noPaths[k - 1][l];
+                }
+
                 //right rule
-                if (l +  1 < noColumns) {
-                    noPaths[k][l + 1] += noPaths[k][l];
+                if (l > 0) {
+                    noPaths[k][l] += noPaths[k][l - 1];
                 }
 
             }
