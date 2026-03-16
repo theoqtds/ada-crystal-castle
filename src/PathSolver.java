@@ -30,24 +30,28 @@ public class PathSolver {
     }
 
     private void printMap(){
+        System.out.println("---------------");
         for (char[] line : map){
             for (char c : line)
                 System.out.print(c);
             System.out.println();
         }
+        System.out.println("---------------");
     }
 
-    private void printPaths(){
+    private void printPaths(){ // this shit is lowkey wrong af
+        System.out.println("---------------");
         for (int[][][] path1 : noPaths) {
-            for (int[][] path2 : noPaths)
-                for (int[] path3 : noPaths){
-                    int total = 0;
-                    for (int path4 : noPaths)
+            for (int[][] path2 : path1)
+                for (int[] path3 : path2){
+                    int total;
+                    for (int path4 : path3)
                         total += path4;
-                    System.out.print(total);       
+                    System.out.print(total + "-");       
                 }
             System.out.println();
         }
+        System.out.println("---------------");
     }
 
     private void printall(int x, int y, int k, int c){
@@ -82,6 +86,8 @@ public class PathSolver {
         for (int i = 0; i <= noMaxJumps; i++) 
             for(int j = 0; j <= noConsecJumps; j++)
                 total += noPaths[noRows-1][noColumns-1][j][i];
+        printMap();
+        printPaths();
         //output total
         return total;
     }
