@@ -16,13 +16,13 @@ public class Main {
             int noConsecJumps = Integer.parseInt(tokens[2]);
             int noMaxJumps = Integer.parseInt(tokens[3]);
 
-            //character matrix holding map information
-            char[][] map = new char[noRows][noColumns];
-            for (int j = 0; j < noRows; j++) {
-                map[j] = input.readLine().toCharArray();
-            }
+            // IS IT BETTER TO HAVE ONE PATHSOLVER OR RESET
+            PathSolver pathSolver = new 
+                                PathSolver(noRows, noColumns, noConsecJumps, noMaxJumps, map);
 
-            PathSolver pathSolver = new PathSolver(noRows, noColumns, noConsecJumps, noMaxJumps, map);
+            //character matrix holding map information
+            for (int j = 0; j < noRows; j++) 
+                pathSolver.addLine(input.readLine().toCharArray(), j);
 
             System.out.println(pathSolver.answer());
         }
