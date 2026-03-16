@@ -18,7 +18,7 @@ public class Main {
 
             // IS IT BETTER TO HAVE ONE PATHSOLVER OR RESET
             PathSolver pathSolver = new 
-                                PathSolver(noRows, noColumns, noConsecJumps, noMaxJumps, map);
+                                PathSolver(noRows, noColumns, noConsecJumps, noMaxJumps);
 
             //character matrix holding map information
             for (int j = 0; j < noRows; j++) 

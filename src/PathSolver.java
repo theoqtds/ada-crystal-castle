@@ -1,5 +1,6 @@
-public class PathSolver {
+import java.lang.Math;
 
+public class PathSolver {
 
     private final char NOCONSTRAINT = '.';
     private final char NODIAGONAL   = 'X';
@@ -14,7 +15,7 @@ public class PathSolver {
     private char[][] map;
     private int mapLine;
 
-    private int[][][] noPaths;
+    private int[][][][] noPaths;
 
     public PathSolver(int noRows, int noColumns, int noConsecJumps, int noMaxJumps) {
         this.noRows = noRows;
@@ -25,7 +26,36 @@ public class PathSolver {
 
         //int matrix holding number of paths to that tile
         noPaths = new int[noRows][noColumns][noConsecJumps+1][noMaxJumps+1];
-        noPaths[0][0][0][noMaxJumps+1] = 1; // all jumps?
+        noPaths[0][0][0][noMaxJumps] = 1; // all jumps?
+    }
+
+    private void printMap(){
+        for (char[] line : map){
+            for (char c : line)
+                System.out.print(c);
+            System.out.println();
+        }
+    }
+
+    private void printPaths(){
+        for (int[][][] path1 : noPaths) {
+            for (int[][] path2 : noPaths)
+                for (int[] path3 : noPaths){
+                    int total = 0;
+                    for (int path4 : noPaths)
+                        total += path4;
+                    System.out.print(total);       
+                }
+            System.out.println();
+        }
+    }
+
+    private void printall(int x, int y, int k, int c){
+        System.out.println("x: " + x + "; ");
+        System.out.println("y: " + y + "; ");
+        System.out.println("k: " + k + "; ");
+        System.out.println("c: " + c + "; ");
+        System.out.println("----------");
     }
 
     public void addLine(char[] line, int i){
@@ -33,57 +63,67 @@ public class PathSolver {
     }
 
     public int answer() {
-        for (int i = 0; i < noRows; i++) {
-            for (int j = 0; j < noColumns; j++) {
+        for (int i = 0; i < noRows; i++) 
+            for (int j = 0; j < noColumns; j++){
                 char tile = map[i][j];
                 if (tile != NOSTEP && (i != 0 || j != 0))
-                    for (int k = 0; k < noMaxJumps + 1; k++) {
-                        downRule(i, j, k);
-                        rightRule(i, j, k);
-                        for (int c = 0; c < noConsecJumps+1; c++){
+                    for (int k = 0; k <= noMaxJumps; k++) //used to reach this point
+                        for (int c = 0; c <= Math.min(k, noConsecJumps); c++){ 
+                                                        //consecutive jumps executed
+                            downRule(i, j, k, c);       //to reach this point 
+                            rightRule(i, j, k, c);
                             leftDownRule(i, j, k, c);
                             doubleDownRule(i, j, k, c);
                             rightDownRule(i, j, k, c);
                         }
-                }
             }
-        }
         //sum all jump final spaces
         int total = 0;
-        for (int i = 0; i < noMaxJumps + 1; i++) 
-            total = total + noPaths[noRows - 1][noColumns - 1][i];
-        
+        for (int i = 0; i <= noMaxJumps; i++) 
+            for(int j = 0; j <= noConsecJumps; j++)
+                total += noPaths[noRows-1][noColumns-1][j][i];
         //output total
         return total;
     }
 
-    public void downRule(int i, int j, int k, int c){
+    private void downRule(int i, int j, int k, int c){
         //down rule
         if (i > 0) 
-            noPaths[i][j][k] += noPaths[i - 1][j][k];
+            noPaths[i][j][0][k] += noPaths[i-1][j][c][k];
     }
 
-    public void rightRule(int i, int j, int k, int c){
+    private void rightRule(int i, int j, int k, int c){
         //right rule
         if (j > 0) 
-            noPaths[i][j][k] += noPaths[i][j - 1][k];
+            noPaths[i][j][0][k] += noPaths[i][j-1][c][k];
     }
 
-    public void leftDownRule(int i, int j, int k, int c){
+    private void leftDownRule(int i, int j, int k, int c){
         //left-down rule
-        if (i > 0 && j < noColumns - 1 && k != 0) 
-            noPaths[i][j][k] += noPaths[i - 1][j + 1][k - 1];
+        if (i > 0 && j < noColumns-1 && k > 0 && c > 0 && canJump(i-1,j+1) && canDiagonal(i-1, j+1)) 
+            // test if it is noColumns-1 or not noColumns
+            noPaths[i][j][c][k] += noPaths[i-1][j+1][c-1][k-1];
     }
 
-    public void doubleDownRule(int i, int j, int k, int c){
-        //down-down rule
-        if (i > 1 && k != 0) 
-            noPaths[i][j][k] += noPaths[i - 2][j][k - 1];
-    }
-
-    public void rightDownRule(int i, int j, int k, int c){
+    private void rightDownRule(int i, int j, int k, int c){
         //right-down rule
-        if (i > 0 && j > 0 && k != 0) 
-            noPaths[i][j][k] += noPaths[i - 1][j - 1][k - 1];
+        if (i > 0 && j > 0 && k > 0 && c > 0 && canJump(i-1,j-1) && canDiagonal(i-1, j-1)) 
+            noPaths[i][j][c][k] += noPaths[i-1][j-1][c-1][k-1];
     }
+
+    private void doubleDownRule(int i, int j, int k, int c){
+        //down-down rule
+        if (i > 1 && k != 0 && canJump(i-2, j) && k > 0 && c > 0)
+            noPaths[i][j][c][k] += noPaths[i-2][j][c-1][k-1];
+    }
+
+    private boolean canJump(int x, int y){
+        return map[x][y] != NOJUMPS;
+    }
+
+    private boolean canDiagonal(int x, int y){
+        return map[x][y] != NODIAGONAL;
+    }
+
+
 }
