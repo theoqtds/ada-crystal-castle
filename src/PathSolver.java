@@ -72,26 +72,33 @@ public class PathSolver {
 
     public int answer() {
         int row = 0;
-        int prevRow = ROWS;
+        int prevRow = 0; //dummy value (wont be used in the first iteration)
         for (int i = 0; i < noRows; i++) {
             //Clear row before being reused
             for (int j = 0; j < noColumns; j++) {
                 char tile = map[i][j];
-                if (tile != NOSTEP && (i != 0 || j != 0))
+                if (tile != NOSTEP && (i != 0 || j != 0)){
                     for (int k = 0; k <= noMaxJumps; k++) //used to reach this point
                         for (int c = 0; c <= Math.min(k, noConsecJumps); c++) {
                             //consecutive jumps executed
                             if (i >= ROWS)
                                 noPaths[row][j][c][k] = 0;
-                            downRule(row, i, j, k, c);       //to reach this point 
-                            rightRule(row, i, j, k, c);
-                            leftDownRule(row, i, j, k, c);
-                            doubleDownRule(row, i, j, k, c);
-                            rightDownRule(row, i, j, k, c);
+                            downRule(row, prevRow, i, j, k, c);       //to reach this point 
+                            rightRule(row, prevRow, i, j, k, c);
+                            leftDownRule(row, prevRow, i, j, k, c);
+                            doubleDownRule(row, prevRow, i, j, k, c);
+                            rightDownRule(row, prevRow, i, j, k, c);
                         }
+                }
+                else { // clear the data on NOSTEP and (0,0) tiles
+                    if (i >= ROWS)
+                        for (int k = 0; k <= noMaxJumps; k++) //used to reach this point
+                            for (int c = 0; c <= Math.min(k, noConsecJumps); c++) 
+                                noPaths[row][j][c][k] = 0;
+                }
             }
+            prevRow = row;
             row     = nextRow(row);
-            prevRow = prevRow(prevRow);
         }
         //sum all jump final spaces
         int total = 0;
@@ -104,30 +111,30 @@ public class PathSolver {
         return total;
     }
 
-    private void downRule(int row, int i, int j, int k, int c){
+    private void downRule(int row, int prevRow, int i, int j, int k, int c){
         if (i > 0) 
-            noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[(i-1) % 3][j][c][k]) % MOD;
+            noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[prevRow][j][c][k]) % MOD;
     }
 
-    private void rightRule(int row, int i, int j, int k, int c){
+    private void rightRule(int row, int prevRow, int i, int j, int k, int c){
         if (j > 0) 
             noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[row][j-1][c][k]) % MOD;
     }
 
-    private void leftDownRule(int row, int i, int j, int k, int c){
+    private void leftDownRule(int row, int prevRow, int i, int j, int k, int c){
         if (i > 0 && j < noColumns-1 && k > 0 && c > 0 && canJump(i-1,j+1) && canDiagonal(i-1, j+1)) 
             // test if it is noColumns-1 or not noColumns
-            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[(i-1) % 3][j+1][c-1][k-1]) % MOD;
+            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[prevRow][j+1][c-1][k-1]) % MOD;
     }
 
-    private void rightDownRule(int row, int i, int j, int k, int c){
+    private void rightDownRule(int row, int prevRow, int i, int j, int k, int c){
         if (i > 0 && j > 0 && k > 0 && c > 0 && canJump(i-1,j-1) && canDiagonal(i-1, j-1)) 
-            noPaths[row][j][c][k] = (noPaths[row][j][c][k]+ noPaths[(i-1) % 3][j-1][c-1][k-1]) % MOD;
+            noPaths[row][j][c][k] = (noPaths[row][j][c][k]+ noPaths[prevRow][j-1][c-1][k-1]) % MOD;
     }
 
-    private void doubleDownRule(int row, int i, int j, int k, int c){
+    private void doubleDownRule(int row, int prevRow, int i, int j, int k, int c){
         if (i > 1 && canJump(i-2, j) && k > 0 && c > 0)
-            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[(i-2) % 3][j][c-1][k-1]) % MOD;
+            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[prevRow(prevRow)][j][c-1][k-1]) % MOD;
     }
 
     private boolean canJump(int x, int y){
