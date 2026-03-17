@@ -6,7 +6,8 @@ public class PathSolver {
     private final char NODIAGONAL   = 'X';
     private final char NOJUMPS      = 'J';
     private final char NOSTEP       = '#';
-    private final int MOD = 1000000007;
+    private final int  ROWS         = 3;
+    private final int  MOD          = 1000000007;
 
     private int noRows;
     private int noColumns;
@@ -27,7 +28,7 @@ public class PathSolver {
 
         //int matrix holding number of paths to that tile
         noPaths = new int[3][noColumns][noConsecJumps+1][noMaxJumps+1];
-        noPaths[0][0][0][0] = 1; // all jumps?
+        noPaths[0][0][0][0] = 1; 
     }
 
     private void printMap(){
@@ -70,31 +71,27 @@ public class PathSolver {
     }
 
     public int answer() {
+        int row = 0;
+        int prevRow = ROWS;
         for (int i = 0; i < noRows; i++) {
             //Clear row before being reused
-            if (i >= 3) {
-                for(int j = 0; j < noColumns; j++) {
-                    for (int k = 0; k <= noConsecJumps; k++) {
-                        for (int l = 0; l <= noMaxJumps; l++) {
-                            noPaths[i % 3][j][k][l] = 0;
-                        }
-                    }
-                }
-            }
-
             for (int j = 0; j < noColumns; j++) {
                 char tile = map[i][j];
                 if (tile != NOSTEP && (i != 0 || j != 0))
                     for (int k = 0; k <= noMaxJumps; k++) //used to reach this point
                         for (int c = 0; c <= Math.min(k, noConsecJumps); c++) {
                             //consecutive jumps executed
-                            downRule(i, j, k, c);       //to reach this point 
-                            rightRule(i, j, k, c);
-                            leftDownRule(i, j, k, c);
-                            doubleDownRule(i, j, k, c);
-                            rightDownRule(i, j, k, c);
+                            if (i >= ROWS)
+                                noPaths[row][j][c][k] = 0;
+                            downRule(row, i, j, k, c);       //to reach this point 
+                            rightRule(row, i, j, k, c);
+                            leftDownRule(row, i, j, k, c);
+                            doubleDownRule(row, i, j, k, c);
+                            rightDownRule(row, i, j, k, c);
                         }
             }
+            row     = nextRow(row);
+            prevRow = prevRow(prevRow);
         }
         //sum all jump final spaces
         int total = 0;
@@ -107,35 +104,30 @@ public class PathSolver {
         return total;
     }
 
-    private void downRule(int i, int j, int k, int c){
-        //down rule
+    private void downRule(int row, int i, int j, int k, int c){
         if (i > 0) 
-            noPaths[i % 3][j][0][k] = (noPaths[i % 3][j][0][k] + noPaths[(i-1) % 3][j][c][k]) % MOD;
+            noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[(i-1) % 3][j][c][k]) % MOD;
     }
 
-    private void rightRule(int i, int j, int k, int c){
-        //right rule
+    private void rightRule(int row, int i, int j, int k, int c){
         if (j > 0) 
-            noPaths[i % 3][j][0][k] = (noPaths[i % 3][j][0][k] + noPaths[i % 3][j-1][c][k]) % MOD;
+            noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[row][j-1][c][k]) % MOD;
     }
 
-    private void leftDownRule(int i, int j, int k, int c){
-        //left-down rule
+    private void leftDownRule(int row, int i, int j, int k, int c){
         if (i > 0 && j < noColumns-1 && k > 0 && c > 0 && canJump(i-1,j+1) && canDiagonal(i-1, j+1)) 
             // test if it is noColumns-1 or not noColumns
-            noPaths[i % 3][j][c][k] = (noPaths[i % 3][j][c][k] + noPaths[(i-1) % 3][j+1][c-1][k-1]) % MOD;
+            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[(i-1) % 3][j+1][c-1][k-1]) % MOD;
     }
 
-    private void rightDownRule(int i, int j, int k, int c){
-        //right-down rule
+    private void rightDownRule(int row, int i, int j, int k, int c){
         if (i > 0 && j > 0 && k > 0 && c > 0 && canJump(i-1,j-1) && canDiagonal(i-1, j-1)) 
-            noPaths[i % 3][j][c][k] = (noPaths[i % 3][j][c][k]+ noPaths[(i-1) % 3][j-1][c-1][k-1]) % MOD;
+            noPaths[row][j][c][k] = (noPaths[row][j][c][k]+ noPaths[(i-1) % 3][j-1][c-1][k-1]) % MOD;
     }
 
-    private void doubleDownRule(int i, int j, int k, int c){
-        //down-down rule
+    private void doubleDownRule(int row, int i, int j, int k, int c){
         if (i > 1 && canJump(i-2, j) && k > 0 && c > 0)
-            noPaths[i % 3][j][c][k] = (noPaths[i % 3][j][c][k] + noPaths[(i-2) % 3][j][c-1][k-1]) % MOD;
+            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[(i-2) % 3][j][c-1][k-1]) % MOD;
     }
 
     private boolean canJump(int x, int y){
@@ -146,5 +138,17 @@ public class PathSolver {
         return map[x][y] != NODIAGONAL;
     }
 
+    private int nextRow(int i){
+        i++;
+        if (i >= ROWS)
+            i = 0;
+        return i;
+    }
 
+    private int prevRow(int i){
+        i--;
+        if (i < 0)
+            i = ROWS-1;
+        return i;
+    }
 }
