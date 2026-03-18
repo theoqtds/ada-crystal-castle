@@ -27,7 +27,7 @@ public class PathSolver {
         this.map = new char[noRows][];
         
         //int matrix holding number of paths to that tile
-        noPaths = new int[3][noColumns][noConsecJumps+1][noMaxJumps+1];
+        noPaths = new int[ROWS][noColumns][noConsecJumps+1][noMaxJumps+1];
         noPaths[0][0][0][0] = 1; 
     }
 
@@ -76,7 +76,6 @@ public class PathSolver {
 
     private void leftDownRule(int row, int prevRow, int i, int j, int c, int k){
         if (i > 0 && j < noColumns-1 && k > 0 && c > 0 && canJump(i-1,j+1) && canDiagonal(i-1, j+1)) 
-            // test if it is noColumns-1 or not noColumns
             noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[prevRow][j+1][c-1][k-1]) % MOD;
     }
 
