@@ -25,45 +25,10 @@ public class PathSolver {
         this.noConsecJumps = noConsecJumps;
         this.noMaxJumps = noMaxJumps;
         this.map = new char[noRows][];
-
+        
         //int matrix holding number of paths to that tile
         noPaths = new int[3][noColumns][noConsecJumps+1][noMaxJumps+1];
         noPaths[0][0][0][0] = 1; 
-    }
-
-    private void printMap(){
-        System.out.println("---------------");
-        for (char[] line : map){
-            for (char c : line)
-                System.out.print(c);
-            System.out.println();
-        }
-        System.out.println("---------------");
-    }
-
-    private void printPaths(){ // this shit is lowkey wrong af
-        System.out.println("---------------");
-        for (int i = 0; i < noRows; i++) {
-            for (int j = 0; j < noColumns; j++) {
-                int total = 0;
-                for (int k = 0; k <= noConsecJumps; k++) {
-                    for (int l = 0; l <= noMaxJumps; l++) {
-                        total = (total + noPaths[i][j][k][l]) % MOD;
-                    }
-                }
-                System.out.print(total + "\t");
-            }
-            System.out.println();
-        }
-        System.out.println("---------------");
-    }
-
-    private void printall(int x, int y, int k, int c){
-        System.out.println("x: " + x + "; ");
-        System.out.println("y: " + y + "; ");
-        System.out.println("k: " + k + "; ");
-        System.out.println("c: " + c + "; ");
-        System.out.println("----------");
     }
 
     public void addLine(char[] line, int i){
@@ -74,28 +39,19 @@ public class PathSolver {
         int row = 0;
         int prevRow = 0; //dummy value (wont be used in the first iteration)
         for (int i = 0; i < noRows; i++) {
-            //Clear row before being reused
+            if (i >= ROWS)
+                clearRow(row);
             for (int j = 0; j < noColumns; j++) {
                 char tile = map[i][j];
-                if (tile != NOSTEP && (i != 0 || j != 0)){
-                    for (int k = 0; k <= noMaxJumps; k++) //used to reach this point
-                        for (int c = 0; c <= Math.min(k, noConsecJumps); c++) {
-                            //consecutive jumps executed
-                            if (i >= ROWS)
-                                noPaths[row][j][c][k] = 0;
-                            downRule(row, prevRow, i, j, k, c);       //to reach this point 
-                            rightRule(row, prevRow, i, j, k, c);
-                            leftDownRule(row, prevRow, i, j, k, c);
-                            doubleDownRule(row, prevRow, i, j, k, c);
-                            rightDownRule(row, prevRow, i, j, k, c);
-                        }
-                }
-                else { // clear the data on NOSTEP and (0,0) tiles
-                    if (i >= ROWS)
-                        for (int k = 0; k <= noMaxJumps; k++) //used to reach this point
-                            for (int c = 0; c <= Math.min(k, noConsecJumps); c++) 
-                                noPaths[row][j][c][k] = 0;
-                }
+                if (tile != NOSTEP && (i != 0 || j != 0))
+                    for (int k = 0; k <= noMaxJumps; k++) //jumps done to reach this point
+                        for (int c = 0; c <= Math.min(k, noConsecJumps); c++) { //consecutive jumps 
+                            downRule(row, prevRow, i, j, c, k);           //done to reach this point       
+                            rightRule(row, prevRow, i, j, c, k);
+                            leftDownRule(row, prevRow, i, j, c, k);
+                            doubleDownRule(row, prevRow, i, j, c, k);
+                            rightDownRule(row, prevRow, i, j, c, k);
+                    }
             }
             prevRow = row;
             row     = nextRow(row);
@@ -104,35 +60,32 @@ public class PathSolver {
         int total = 0;
         for (int i = 0; i <= noMaxJumps; i++) 
             for(int j = 0; j <= noConsecJumps; j++)
-                total = (total + noPaths[(noRows-1) % 3][noColumns-1][j][i]) % MOD;
-        //printMap();
-        //printPaths();
-        //output total
+                total = (total + noPaths[prevRow][noColumns-1][j][i]) % MOD;
         return total;
     }
 
-    private void downRule(int row, int prevRow, int i, int j, int k, int c){
+    private void downRule(int row, int prevRow, int i, int j, int c, int k){
         if (i > 0) 
             noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[prevRow][j][c][k]) % MOD;
     }
 
-    private void rightRule(int row, int prevRow, int i, int j, int k, int c){
+    private void rightRule(int row, int prevRow, int i, int j, int c, int k){
         if (j > 0) 
             noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[row][j-1][c][k]) % MOD;
     }
 
-    private void leftDownRule(int row, int prevRow, int i, int j, int k, int c){
+    private void leftDownRule(int row, int prevRow, int i, int j, int c, int k){
         if (i > 0 && j < noColumns-1 && k > 0 && c > 0 && canJump(i-1,j+1) && canDiagonal(i-1, j+1)) 
             // test if it is noColumns-1 or not noColumns
             noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[prevRow][j+1][c-1][k-1]) % MOD;
     }
 
-    private void rightDownRule(int row, int prevRow, int i, int j, int k, int c){
+    private void rightDownRule(int row, int prevRow, int i, int j, int c, int k){
         if (i > 0 && j > 0 && k > 0 && c > 0 && canJump(i-1,j-1) && canDiagonal(i-1, j-1)) 
             noPaths[row][j][c][k] = (noPaths[row][j][c][k]+ noPaths[prevRow][j-1][c-1][k-1]) % MOD;
     }
 
-    private void doubleDownRule(int row, int prevRow, int i, int j, int k, int c){
+    private void doubleDownRule(int row, int prevRow, int i, int j, int c, int k){
         if (i > 1 && canJump(i-2, j) && k > 0 && c > 0)
             noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[prevRow(prevRow)][j][c-1][k-1]) % MOD;
     }
@@ -157,5 +110,12 @@ public class PathSolver {
         if (i < 0)
             i = ROWS-1;
         return i;
+    }
+
+    private void clearRow(int row){
+        for (int j = 0; j < noColumns; j++) 
+            for (int k = 0; k <= noMaxJumps; k++) 
+                for (int c = 0; c <= Math.min(k, noConsecJumps); c++) 
+                    noPaths[row][j][c][k] = 0;
     }
 }
