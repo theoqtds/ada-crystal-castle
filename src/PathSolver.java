@@ -37,7 +37,7 @@ public class PathSolver {
 
     public int answer() {
         int row = 0;
-        int prevRow = 0; //dummy value (wont be used in the first iteration)
+        int prevRow = ROWS-1; //dummy value (wont be used in the first iteration)
         for (int i = 0; i < noRows; i++) {
             if (i >= ROWS)
                 clearRow(row);
@@ -45,9 +45,9 @@ public class PathSolver {
                 char tile = map[i][j];
                 if (tile != NOSTEP && (i != 0 || j != 0))
                     for (int k = 0; k <= noMaxJumps; k++) //jumps done to reach this point
-                        for (int c = 0; c <= Math.min(k, noConsecJumps); c++) { //consecutive jumps 
-                            downRule(row, prevRow, i, j, c, k);           //done to reach this point       
-                            rightRule(row, prevRow, i, j, c, k);
+                        for (int c = 0; c <= Math.min(k, noConsecJumps); c++) { //consecutive jumps
+                            downRule(row, prevRow, i, j, c, k);                 //done to reach this point
+                            rightRule(row, i, j, c, k);
                             leftDownRule(row, prevRow, i, j, c, k);
                             doubleDownRule(row, prevRow, i, j, c, k);
                             rightDownRule(row, prevRow, i, j, c, k);
@@ -69,7 +69,7 @@ public class PathSolver {
             noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[prevRow][j][c][k]) % MOD;
     }
 
-    private void rightRule(int row, int prevRow, int i, int j, int c, int k){
+    private void rightRule(int row, int i, int j, int c, int k){
         if (j > 0) 
             noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[row][j-1][c][k]) % MOD;
     }
