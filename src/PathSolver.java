@@ -86,39 +86,39 @@ public class PathSolver {
         int lastRowIndex = prevRow; 
         for (int i = 0; i <= noMaxJumps; i++) 
             for (int j = 0; j <= noConsecJumps; j++) 
-                total = (total + noPaths[lastRowIndex][noColumns - 1][j][i]) % MOD;
+                total = sum(total, noPaths[lastRowIndex][noColumns - 1][j][i]);
         return total;
     }
 
     // Move: (i-1, j) -> (i, j). Resets consecutive jumps to 0.
     private void downRule(int row, int prevRow, int i, int j, int c, int k) {
         if (i > 0) 
-            noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[prevRow][j][c][k]) % MOD;
+            noPaths[row][j][0][k] = sum(noPaths[row][j][0][k], noPaths[prevRow][j][c][k]);
     }
 
     // Move: (i, j-1) -> (i, j). Resets consecutive jumps to 0.
     private void rightRule(int row, int i, int j, int c, int k) {
         if (j > 0) 
-            noPaths[row][j][0][k] = (noPaths[row][j][0][k] + noPaths[row][j-1][c][k]) % MOD;
+            noPaths[row][j][0][k] = sum(noPaths[row][j][0][k], noPaths[row][j-1][c][k]);
     }
 
     // Jump: (i-1, j+1) -> (i, j). Increments jump counts.
     private void leftDownRule(int row, int prevRow, int i, int j, int c, int k) {
         if (i > 0 && j < noColumns - 1 && k > 0 && c > 0 && canJump(i - 1, j + 1) && canDiagonal(i - 1, j + 1)) 
-            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[prevRow][j + 1][c - 1][k - 1]) % MOD;
+            noPaths[row][j][c][k] = sum(noPaths[row][j][c][k], noPaths[prevRow][j + 1][c - 1][k - 1]);
     }
 
     // Jump: (i-1, j-1) -> (i, j). Increments jump counts.
     private void rightDownRule(int row, int prevRow, int i, int j, int c, int k) {
         if (i > 0 && j > 0 && k > 0 && c > 0 && canJump(i - 1, j - 1) && canDiagonal(i - 1, j - 1)) 
-            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[prevRow][j - 1][c - 1][k - 1]) % MOD;
+            noPaths[row][j][c][k] = sum(noPaths[row][j][c][k], noPaths[prevRow][j - 1][c - 1][k - 1]);
     }
 
     // Jump: (i-2, j) -> (i, j). Increments jump counts.
     private void doubleDownRule(int row, int prevRow, int i, int j, int c, int k) {
         // Needs i > 1 because it jumps 2 rows back
         if (i > 1 && canJump(i - 2, j) && k > 0 && c > 0)
-            noPaths[row][j][c][k] = (noPaths[row][j][c][k] + noPaths[prevRow(prevRow)][j][c - 1][k - 1]) % MOD;
+            noPaths[row][j][c][k] = sum(noPaths[row][j][c][k], noPaths[prevRow(prevRow)][j][c - 1][k - 1]);
     }
 
     private boolean canJump(int x, int y) {
@@ -131,12 +131,18 @@ public class PathSolver {
 
     // Helper for circular buffer indexing (0, 1, 2, 0, 1, 2...)
     private int nextRow(int i) {
-        return (i + 1) % MIN_ROWS;
+        i++;
+        if (i >= MIN_ROWS)
+            i = 0;
+        return i;
     }
 
     // Helper for circular buffer indexing backwards
     private int prevRow(int i) {
-        return (i - 1 < 0) ? MIN_ROWS - 1 : i - 1;
+        i--;
+        if (i < 0)
+            i = MIN_ROWS-1;
+        return i; 
     }
 
     // Resets the data in the DP table for a row before it is reused
@@ -146,4 +152,20 @@ public class PathSolver {
                 for (int c = 0; c <= Math.min(k, noConsecJumps); c++) 
                     noPaths[row][j][c][k] = 0;
     }
+
+    /**
+     * @pre a < MOD && b < MOD
+     * This is fine because we use it everytime we sum 2 numbers that are < MOD
+     * the only way a + b > 2MOD is if a > MOD or b > MOD
+     * therefore the result is always < MOD and all the numbers kept in the table will then be < MOD
+     *
+     * doing a % operation is expensive so thats a way to go around it
+     */
+    private int sum(int a, int b){
+        int result = a + b;
+        if (result >= MOD)
+            result -= MOD;
+        return result;
+    }
+
 }
